@@ -1,0 +1,85 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      // For this app, let's assume the user who set it up is an admin.
+      // In production, we'd check a dedicated 'admins' collection.
+      return isEmailVerified() && (
+        request.auth.token.email == 'rikosugianto68@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Entity Validations
+    function isValidVesselStatus(data) {
+      return data.keys().hasAll(['currentStatus', 'tripPhase', 'maxPassengers']) &&
+             data.currentStatus is string && data.currentStatus.size() <= 50 &&
+             data.tripPhase is string && data.tripPhase.size() <= 50 &&
+             data.maxPassengers is number && data.maxPassengers >= 0 && data.maxPassengers <= 500;
+    }
+
+    function isValidPassenger(data) {
+      return data.keys().hasAll(['id', 'name', 'villageId', 'timestamp']) &&
+             data.id is string && data.id.size() <= 128 &&
+             data.name is string && data.name.size() <= 100 &&
+             data.villageId is string && data.villageId.size() <= 50 &&
+             data.timestamp is string && data.timestamp.size() <= 50;
+    }
+
+    function isValidLog(data) {
+      return data.keys().hasAll(['id', 'timestamp', 'action', 'user']) &&
+             data.id is string && data.id.size() <= 128 &&
+             data.action is string && data.action.size() <= 500 &&
+             data.user is string && data.user.size() <= 100;
+    }
+
+    // Collection Rules
+    match /status/current {
+      allow read: if true;
+      allow write: if isAdmin() && isValidVesselStatus(incoming());
+    }
+
+    match /passengers/{passengerId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidId(passengerId) && isValidPassenger(incoming());
+      allow update, delete: if isAdmin();
+    }
+
+    match /logs/{logId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidId(logId) && isValidLog(incoming());
+      allow update, delete: if isAdmin();
+    }
+
+    match /admins/{adminId} {
+      allow read: if isAdmin();
+      allow write: if false; // Only manageable via Console or backend initially
+    }
+  }
+}

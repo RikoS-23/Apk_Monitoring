@@ -1,0 +1,8 @@
+{
+  "name": "Sistem Monitoring Kapal Laonti-Kendari",
+  "description": "Aplikasi monitoring status operasional kapal penyeberangan rute Pesisir Laonti–Kendari dengan Smart ETA dan timeline checkpoint desa untuk penumpang, kapten, dan admin.",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": []
+}

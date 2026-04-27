@@ -1,0 +1,76 @@
+{
+  "entities": {
+    "VesselStatus": {
+      "title": "Vessel Status",
+      "description": "The current operational status and location of the ship.",
+      "type": "object",
+      "properties": {
+        "currentStatus": { "type": "string", "enum": ["BEROPERASI", "TIDAK BEROPERASI", "TERTUNDA"] },
+        "tripPhase": { "type": "string", "enum": ["Belum Berangkat", "Dalam Perjalanan", "Sedang Bersandar", "Perjalanan Selesai"] },
+        "currentCheckpointId": { "type": ["string", "null"] },
+        "nextCheckpointId": { "type": ["string", "null"] },
+        "currentWeather": { "type": "string" },
+        "currentLoad": { "type": "string" },
+        "delayReason": { "type": "string" },
+        "delayMinutes": { "type": "number" },
+        "announcement": { "type": "string" },
+        "shipName": { "type": "string" },
+        "departureTime": { "type": "string" },
+        "cancellationReason": { "type": "string" },
+        "cancellationDetails": { "type": "string" },
+        "maxPassengers": { "type": "number" },
+        "weatherWarning": {
+          "type": "object",
+          "properties": {
+            "isDangerous": { "type": "boolean" },
+            "message": { "type": "string" },
+            "windSpeed": { "type": "number" },
+            "description": { "type": "string" },
+            "temperature": { "type": "number" }
+          }
+        },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["currentStatus", "tripPhase", "maxPassengers"]
+    },
+    "Passenger": {
+      "title": "Passenger Record",
+      "description": "A passenger registered for the current trip.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "villageId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "userId": { "type": "string" }
+      },
+      "required": ["id", "name", "villageId", "timestamp"]
+    },
+    "Log": {
+      "title": "Activity Log",
+      "description": "A log entries of system activities.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "action": { "type": "string" },
+        "user": { "type": "string" }
+      },
+      "required": ["id", "timestamp", "action", "user"]
+    }
+  },
+  "firestore": {
+    "status/current": {
+      "schema": "VesselStatus",
+      "description": "Singleton document for current trip status."
+    },
+    "passengers/{passengerId}": {
+      "schema": "Passenger",
+      "description": "Collection of all passengers for the current trip."
+    },
+    "logs/{logId}": {
+      "schema": "Log",
+      "description": "Collection of activity logs."
+    }
+  }
+}
